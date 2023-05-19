@@ -9,34 +9,41 @@ class CountdownActionClientNode(Node):
 
     def __init__(self):
         super().__init__("countdown_action_client")
+
+        # Create an action client for the Countdown action
         self._countdown_action_client_ = ActionClient(
             self, Countdown, "countdown")
+
+        # Log a message to indicate that the action client has started
         self.get_logger().info("Countdown Action Client has started.")
 
+        # Send a goal with starting number 3
         self.send_goal_countdown(3)
         #self.send_goal_countdown(21)
 
     def send_goal_countdown(self, starting_num):
+        # Create a goal message and set the starting number
         goal_msg = Countdown.Goal()
         goal_msg.starting_num = starting_num
 
+        # Wait for the action server to become available
         while not self._countdown_action_client_.wait_for_server(timeout_sec=2):
             self.get_logger().warn("Waiting for Countdown Action Server...")
 
+        # Send the goal asynchronously and register a feedback callback
         self._send_goal_future_ = self._countdown_action_client_.send_goal_async(
             goal_msg, feedback_callback=self.feedback_callback_countdown)
-        self._send_goal_future_.add_done_callback(self.goal_response_callback_countdown)
+        self._send_goal_future_.add_done_callback(
+            self.goal_response_callback_countdown)
 
     def feedback_callback_countdown(self, feedback_msg):
-        self.get_logger().info(f"@fbk_cb: feedback_msg: {type(feedback_msg)}")
+        # Process the feedback received from the action server
         feedback = feedback_msg.feedback
-        self.get_logger().info(f"@fbk_cb: feedback: {type(feedback)}")
-        self.get_logger().info(f"Recieved Feedback: {feedback.current_num}")
+        self.get_logger().info(f"Received Feedback: {feedback.current_num}")
 
     def goal_response_callback_countdown(self, future):
-        self.get_logger().info(f"@goal_resp_cb: future: {type(future)}")
+        # Process the response from the action server after sending the goal
         goal_handle = future.result()
-        self.get_logger().info(f"@goal_resp_cb: goal_handle: {type(goal_handle)}")
 
         if not goal_handle.accepted:
             self.get_logger().error("Goal rejected :(")
@@ -44,28 +51,34 @@ class CountdownActionClientNode(Node):
 
         self.get_logger().info("Goal accepted :)")
 
+        # Get the result of the action and register a callback
         self._get_result_future_ = goal_handle.get_result_async()
-        self._get_result_future_.add_done_callback(self.get_result_callback_countdown)
+        self._get_result_future_.add_done_callback(
+            self.get_result_callback_countdown)
 
     def get_result_callback_countdown(self, future):
-        self.get_logger().info(f"@goal_resp_cb: future: {type(future)}")
+        # Process the result of the action
         try:
             result = future.result().result
-            self.get_logger().info(f"@get_res_cb: result: {type(result)}")
             self.get_logger().info(
                 f"Result: Finished Countdown: {result.finished_countdown}")
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
-        
 
 
 def main(args=None):
+    # Initialize the ROS client library
     rclpy.init(args=args)
-    # Code goes here
+
+    # Create an instance of the CountdownActionClientNode
     node = CountdownActionClientNode()
-    #node.send_goal_countdown(10)
+
+    # Run the node until it's shutdown
     rclpy.spin(node)
+
+    # Shutdown the ROS client library
     rclpy.shutdown()
+
 
 if __name__ == "__main__":
     main()
