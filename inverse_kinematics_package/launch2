@@ -1,0 +1,36 @@
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+
+
+def generate_launch_description():
+    # Declare launch arguments for the parameters
+    end_effector_x = DeclareLaunchArgument(
+        'end_effector_x',
+        default_value='0.0',
+        description='End effector X coordinate'
+    )
+    end_effector_y = DeclareLaunchArgument(
+        'end_effector_y',
+        default_value='0.0',
+        description='End effector Y coordinate'
+    )
+
+    # Define the node with the updated parameters
+    node = Node(
+        package='your_package_name',  # Replace with the actual package name
+        executable='your_script_name.py',  # Replace with the actual script name
+        name='end_effector_to_joint_angles',
+        output='screen',
+        parameters=[
+            {'end_effector_x': LaunchConfiguration('end_effector_x')},
+            {'end_effector_y': LaunchConfiguration('end_effector_y')}
+        ]
+    )
+
+    return LaunchDescription([
+        end_effector_x,
+        end_effector_y,
+        node
+    ])

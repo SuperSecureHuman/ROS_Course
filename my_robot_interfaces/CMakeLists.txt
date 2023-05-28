@@ -14,6 +14,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/LedStatusArray.msg"
   "srv/ComputeRectangleArea.srv"
   "srv/SetLed.srv"
+  "srv/InverseTwo.srv"
+  "srv/InverseThree.srv"
 )
 
 ament_export_dependencies(rosidl_default_runtime)
